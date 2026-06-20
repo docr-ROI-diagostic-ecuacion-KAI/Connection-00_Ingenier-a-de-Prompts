@@ -1,43 +1,22 @@
 <!doctype html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Connection 00 · Ingeniería de Prompts</title>
-    <meta name="description" content="Connection 00 Doc ROI: ingeniería de prompts para aprender jugando a programar la IA generativa." />
-    <style>
-      html,
-      body { margin: 0; min-height: 100%; background: #06101f; }
-      #docroi-loader { min-height: 100vh; display: grid; place-items: center; padding: 24px; font-family: Arial, sans-serif; color: #fff; text-align: center; }
-    </style>
-  </head>
-  <body>
-    <div id="docroi-loader">Cargando Connection 00 Doc ROI...</div>
-    <script>
-      function applyGlobalDocRoiHeader(html) {
-        var logo = 'https://docroi.marketing/wp-content/uploads/2024/12/Logo_Doctor_ROI.jpg';
-        var botiquin = 'https://el-botiquin-del-doc-roi.vercel.app/';
-        var header = '<header class="docroi-global-header"><div class="docroi-wrap"><a class="docroi-global-brand" href="' + botiquin + '" target="_blank" rel="noopener" aria-label="Ir al Botiquín DOC ROI"><img src="' + logo + '" alt="DOC ROI"></a><nav class="docroi-header-actions" aria-label="Navegación principal DOC ROI"><a href="#bloque-formativo">Método</a><a href="#microjuegos">Recursos</a><a class="docroi-header-cta" href="#bloque-formativo">Abrir herramienta</a></nav></div></header>';
-        var css = 'html{scroll-behavior:smooth}.docroi-global-header{position:sticky;top:0;z-index:999;background:#03060C;border-bottom:1px solid rgba(255,255,255,.12)}.docroi-global-header .docroi-wrap{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:12px 0}.docroi-global-brand{display:inline-flex;align-items:center;text-decoration:none}.docroi-global-brand img{width:188px;height:54px;object-fit:contain;display:block}.docroi-header-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap}.docroi-header-actions a{min-height:44px;display:inline-flex;align-items:center;justify-content:center;padding:0 14px;border:1px solid rgba(255,255,255,.18);border-radius:8px;color:#F3F4F6!important;text-decoration:none!important;font-size:14px;font-weight:900;line-height:1;white-space:nowrap}.docroi-header-actions .docroi-header-cta{background:#fff!important;color:#0B0F19!important;border-color:#fff!important;padding:0 18px}.docroi-section,.docroi-hero,#bloque-formativo,#microjuegos,#reto-diario,#faq{scroll-margin-top:96px}@media(max-width:720px){.docroi-global-header .docroi-wrap{align-items:flex-start;flex-direction:column}.docroi-header-actions{width:100%;justify-content:flex-start}.docroi-header-actions a{flex:1 1 auto}.docroi-header-actions .docroi-header-cta{flex-basis:100%}.docroi-global-brand img{width:160px;height:46px}}';
-        html = html.replace(/<header class="docroi-top">[\s\S]*?<\/header>/, header);
-        html = html.replace('<style>', '<style>' + css);
-        html = html.replace('</script>\n<!-- /wp:html -->', "document.addEventListener('click',function(event){var link=event.target.closest('a[href^=\"#\"]');if(!link)return;var id=link.getAttribute('href').slice(1);var target=document.getElementById(id);if(!target)return;event.preventDefault();target.scrollIntoView({behavior:'smooth',block:'start'});});\n</script>\n<!-- /wp:html -->");
-        return html;
-      }
-
-      fetch('https://raw.githubusercontent.com/docr-ROI-diagostic-ecuacion-KAI/Connection-00_Ingenier-a-de-Prompts/main/public/connection_00_ingenieria_de_prompts_pildora_wordpress.txt?ts=' + Date.now(), { cache: 'no-store' })
-        .then(function(response) {
-          if (!response.ok) throw new Error('No se pudo cargar Connection 00.');
-          return response.text();
-        })
-        .then(function(html) {
-          document.open();
-          document.write(applyGlobalDocRoiHeader(html));
-          document.close();
-        })
-        .catch(function(error) {
-          document.getElementById('docroi-loader').textContent = error.message;
-        });
-    </script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Connection 00 · Ingeniería de Prompts</title>
+  <meta name="description" content="Connection 00 Doc ROI: ingeniería de prompts, formación aplicada y gamificación para aprender a programar la IA generativa." />
+  <style>
+    html,body{margin:0;min-height:100%;background:#0B0F19;color:#fff;font-family:Inter,Arial,sans-serif}
+    #docroi-loader{min-height:100vh;display:grid;place-items:center;padding:24px;text-align:center;font-weight:900;letter-spacing:.01em}
+  </style>
+</head>
+<body>
+  <div id="docroi-loader">Cargando Connection 00 · DOC ROI...</div>
+  <script>
+    fetch('./public/connection_00_ingenieria_de_prompts_pildora_wordpress.txt?ts=' + Date.now(), { cache: 'no-store' })
+      .then(function(response){ if(!response.ok) throw new Error('No se pudo cargar Connection 00.'); return response.text(); })
+      .then(function(html){ document.open(); document.write(html); document.close(); })
+      .catch(function(error){ document.getElementById('docroi-loader').textContent = error.message; });
+  </script>
+</body>
 </html>
