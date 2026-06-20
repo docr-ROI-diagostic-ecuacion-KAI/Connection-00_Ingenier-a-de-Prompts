@@ -26,10 +26,20 @@
   <body>
     <div id="docroi-loader">Cargando píldora Doc ROI...</div>
     <script>
+      var version = 'product-ficha-visible-20260620';
       var sources = [
-        '/connection_00_ingenieria_de_prompts_pildora_wordpress.txt',
-        './connection_00_ingenieria_de_prompts_pildora_wordpress.txt'
+        '/connection_00_ingenieria_de_prompts_pildora_wordpress.txt?v=' + version,
+        './connection_00_ingenieria_de_prompts_pildora_wordpress.txt?v=' + version
       ];
+
+      var workflowCss = '<style>.docroi-product-workflow{background:#fff;padding:72px 24px;border-bottom:1px solid #E1E7EF}.docroi-product-workflow .docroi-product-inner{max-width:1120px;margin:0 auto}.docroi-product-eyebrow{display:inline-block;background:#EAF6FB;color:#003B5C;border:1px solid #D8ECF8;border-radius:999px;padding:9px 14px;font:900 12px Inter,Arial,sans-serif;letter-spacing:.06em;text-transform:uppercase;margin-bottom:18px}.docroi-product-workflow h2{font-family:Inter,Arial,sans-serif;font-size:clamp(34px,5vw,58px);line-height:1.04;margin:0 0 18px;color:#0B0F19;font-weight:900;letter-spacing:0}.docroi-product-workflow p{font-family:Inter,Arial,sans-serif;color:#5B6472;font-size:17px;line-height:1.75;margin:0;max-width:820px}.docroi-product-flow{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:28px}.docroi-product-step{border:1px solid #E1E7EF;border-radius:8px;background:#F8FBFD;padding:18px;min-height:150px}.docroi-product-step strong{display:block;color:#003B5C;font:900 18px Inter,Arial,sans-serif;margin-bottom:8px}.docroi-product-step span{display:block;color:#5B6472;font:600 14px/1.55 Inter,Arial,sans-serif}.docroi-product-step.final{background:#003B5C;border-color:#003B5C}.docroi-product-step.final strong,.docroi-product-step.final span{color:#fff}.docroi-product-links{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}.docroi-product-links a{display:block;text-decoration:none;border:1px solid #E1E7EF;border-radius:8px;padding:16px 18px;background:#fff;color:#0B0F19;font:900 15px Inter,Arial,sans-serif}.docroi-product-links small{display:block;margin-top:5px;color:#5B6472;font:600 13px/1.45 Inter,Arial,sans-serif}@media(max-width:900px){.docroi-product-flow,.docroi-product-links{grid-template-columns:1fr}.docroi-product-step{min-height:auto}}</style>';
+
+      var workflowHtml = '<section class="docroi-product-workflow" id="flujo-ficha-producto"><div class="docroi-product-inner"><span class="docroi-product-eyebrow">Flujo de clase · ficha de producto</span><h2>La ficha final nace de adjuntar bien los materiales.</h2><p>Para que el prompt produzca una ficha de producto útil, no basta con escribir una orden. El alumno debe trabajar sobre el mismo proyecto o campaña y adjuntar en el chat de IA: logo, ficha de buyer persona, ficha de producto y fotos reales del producto.</p><div class="docroi-product-flow"><div class="docroi-product-step"><strong>1. Logo</strong><span>Define identidad visual, tono de marca y coherencia gráfica.</span></div><div class="docroi-product-step"><strong>2. Buyer persona</strong><span>Usa la ficha de la píldora 2 o un resumen del público objetivo.</span></div><div class="docroi-product-step"><strong>3. Ficha de producto</strong><span>Usa la píldora 4 para aportar atributos, beneficios, objeciones y datos clave.</span></div><div class="docroi-product-step"><strong>4. Fotos</strong><span>Adjunta las imágenes que se usaron o se usarán para presentar el producto.</span></div><div class="docroi-product-step final"><strong>5. Prompt final</strong><span>La IA genera una ficha comercial coherente con marca, producto y público.</span></div></div><div class="docroi-product-links"><a href="https://juan-valdez.vercel.app/" target="_blank" rel="noopener">Ejemplo final Juan Valdez<small>Resultado conseguido con prompt y adjuntos.</small></a><a href="https://buyer-persona-three.vercel.app/" target="_blank" rel="noopener">Ficha buyer persona<small>Referencia de la píldora 2.</small></a><a href="https://connection-04-ficha-de-producto.vercel.app/" target="_blank" rel="noopener">Ficha de producto<small>Referencia de la píldora 4.</small></a></div></div></section>';
+
+      function makeProductFichaVisible(html) {
+        var withCss = html.replace('</style>', workflowCss + '</style>');
+        return withCss.replace('<section class="docroi-section white" id="bloque-formativo">', workflowHtml + '<section class="docroi-section white" id="bloque-formativo">');
+      }
 
       function loadSource(index) {
         return fetch(sources[index], { cache: 'no-store' }).then(function(response) {
@@ -44,7 +54,7 @@
       loadSource(0)
         .then(function(html) {
           document.open();
-          document.write(html);
+          document.write(makeProductFichaVisible(html));
           document.close();
         })
         .catch(function() {
