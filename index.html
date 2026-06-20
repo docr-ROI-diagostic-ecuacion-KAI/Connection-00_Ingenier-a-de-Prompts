@@ -15,25 +15,16 @@
   <script>
     (function(){
       var fileName = 'connection_00_ingenieria_de_prompts_pildora_wordpress.txt';
-      var globalCss = 'html{scroll-behavior:smooth}.docroi-global-header,.docroi-global-header *{box-sizing:border-box}.docroi-global-header{position:sticky;top:0;z-index:9999;width:100%;background:rgba(5,7,11,.98);border-bottom:1px solid rgba(255,255,255,.16);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);font-family:Inter,Arial,sans-serif}.docroi-header-shell{width:min(1220px,calc(100% - 40px));min-height:82px;margin:auto;padding:14px 0;display:flex;align-items:center;justify-content:space-between;gap:20px}.docroi-header-logo{display:inline-flex;align-items:center;text-decoration:none}.docroi-header-logo img{display:block;width:auto;height:48px;max-width:176px;object-fit:contain}.docroi-header-nav{display:flex;align-items:center;justify-content:flex-end;gap:10px;min-width:0}.docroi-header-link,.docroi-header-action{display:inline-flex;align-items:center;justify-content:center;min-height:42px;border-radius:8px;padding:10px 14px;font-size:14px;line-height:1.1;font-weight:900;text-decoration:none!important;white-space:nowrap;transition:transform .16s ease,border-color .16s ease,background .16s ease,color .16s ease}.docroi-header-link{color:#F3F4F6!important;border:1px solid transparent;background:transparent}.docroi-header-link:hover,.docroi-header-link:focus-visible{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.24)}.docroi-header-action{color:#05070b!important;background:#fff;border:1px solid #fff;box-shadow:0 8px 20px rgba(5,7,11,.08)}.docroi-header-action:hover,.docroi-header-action:focus-visible{transform:translateY(-1px);background:#fdfdfd}section[id],div[id]{scroll-margin-top:104px}@media(max-width:760px){.docroi-header-shell{width:calc(100% - 32px);min-height:116px;align-items:flex-start;flex-direction:column;gap:12px;padding:12px 0}.docroi-header-logo img{height:42px;max-width:156px}.docroi-header-nav{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:8px}.docroi-header-action{grid-column:1/-1}.docroi-header-link,.docroi-header-action{width:100%;min-height:44px;padding:10px 12px;font-size:13px}section[id],div[id]{scroll-margin-top:138px}}';
-      var globalHeader = '<header class="docroi-global-header" aria-label="Cabecera DOC ROI"><div class="docroi-header-shell"><a class="docroi-header-logo" href="https://el-botiquin-del-doc-roi.vercel.app/" target="_blank" rel="noopener noreferrer" aria-label="Ir al Botiquín DOC ROI"><img src="https://docroi.marketing/wp-content/uploads/2024/12/Logo_Doctor_ROI.jpg" alt="DOC ROI"></a><nav class="docroi-header-nav" aria-label="Navegación principal"><a class="docroi-header-link" href="#bloque-formativo">Método</a><a class="docroi-header-link" href="#faq">FAQ</a><a class="docroi-header-action" href="#microjuegos">Gamificación</a></nav></div></header>';
-      function applyGlobalHeader(html){
-        html = html.replace('<style>', '<style>' + globalCss);
-        html = html.replace(/<header class="docroi-top">[\s\S]*?<\/header>/, globalHeader);
-        if(html.indexOf('docroi-global-header') === -1){ html = html.replace('<div class="docroi-lab" id="top">', '<div class="docroi-lab" id="top">' + globalHeader); }
-        html = html.replace('</script>\n<!-- /wp:html -->', "document.addEventListener('click',function(event){var link=event.target.closest('a[href^=\"#\"]');if(!link)return;var id=link.getAttribute('href').slice(1);var target=document.getElementById(id);if(!target&&id==='bloque-formativo')target=document.getElementById('bloque-academico');if(!target&&id==='microjuegos')target=document.getElementById('gamificacion');if(!target)return;event.preventDefault();target.scrollIntoView({behavior:'smooth',block:'start'});if(history.pushState)history.pushState(null,'','#'+target.id);});\n</script>\n<!-- /wp:html -->");
-        return html;
+      function load(url){
+        return fetch(url + '?ts=' + Date.now(), { cache: 'no-store' }).then(function(response){
+          if(!response.ok) throw new Error('404');
+          return response.text();
+        });
       }
-      fetch('./' + fileName + '?ts=' + Date.now(), { cache: 'no-store' })
-        .then(function(response){
-          if(response.ok) return response.text();
-          return fetch('/' + fileName + '?ts=' + Date.now(), { cache: 'no-store' }).then(function(response2){
-            if(!response2.ok) throw new Error('No se pudo cargar Connection 00.');
-            return response2.text();
-          });
-        })
-        .then(function(html){ document.open(); document.write(applyGlobalHeader(html)); document.close(); })
-        .catch(function(error){ document.getElementById('docroi-loader').textContent = error.message; });
+      load('./' + fileName)
+        .catch(function(){ return load('/' + fileName); })
+        .then(function(html){ document.open(); document.write(html); document.close(); })
+        .catch(function(){ document.getElementById('docroi-loader').textContent = 'No se pudo cargar Connection 00.'; });
     }());
   </script>
 </body>
