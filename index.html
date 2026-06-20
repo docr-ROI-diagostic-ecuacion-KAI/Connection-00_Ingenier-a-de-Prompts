@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Connection 00 · Ingeniería de Prompts</title>
-    <meta name="description" content="Píldora Doc ROI Connection 00: laboratorio de ingeniería de prompts para aprender jugando." />
+    <meta name="description" content="Connection 00 Doc ROI: ingeniería de prompts para aprender jugando a programar la IA generativa." />
     <style>
       html,
       body {
@@ -24,11 +24,11 @@
     </style>
   </head>
   <body>
-    <div id="docroi-loader">Cargando píldora Doc ROI...</div>
+    <div id="docroi-loader">Cargando Connection 00 Doc ROI...</div>
     <script>
-      fetch('https://raw.githubusercontent.com/docr-ROI-diagostic-ecuacion-KAI/Connection-00_Ingenier-a-de-Prompts/43296ce0b0d728a719b33674bcd1c5c604226ec4/public/connection_00_ingenieria_de_prompts_pildora_wordpress.txt', { cache: 'no-store' })
+      fetch('https://raw.githubusercontent.com/docr-ROI-diagostic-ecuacion-KAI/Connection-00_Ingenier-a-de-Prompts/main/public/connection_00_ingenieria_de_prompts_pildora_wordpress.txt?ts=' + Date.now(), { cache: 'no-store' })
         .then(function(response) {
-          if (!response.ok) throw new Error('No se pudo cargar la píldora.');
+          if (!response.ok) throw new Error('No se pudo cargar Connection 00.');
           return response.text();
         })
         .then(function(html) {
