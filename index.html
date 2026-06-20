@@ -19,24 +19,36 @@
         padding: 24px;
         font-family: Arial, sans-serif;
         color: #fff;
+        text-align: center;
       }
     </style>
   </head>
   <body>
     <div id="docroi-loader">Cargando píldora Doc ROI...</div>
     <script>
-      fetch('/connection_00_ingenieria_de_prompts_pildora_wordpress.txt')
-        .then(function(response) {
-          if (!response.ok) throw new Error('No se pudo cargar la píldora.');
+      var sources = [
+        '/connection_00_ingenieria_de_prompts_pildora_wordpress.txt',
+        './connection_00_ingenieria_de_prompts_pildora_wordpress.txt'
+      ];
+
+      function loadSource(index) {
+        return fetch(sources[index], { cache: 'no-store' }).then(function(response) {
+          if (!response.ok) throw new Error('missing');
           return response.text();
-        })
+        }).catch(function(error) {
+          if (index + 1 < sources.length) return loadSource(index + 1);
+          throw error;
+        });
+      }
+
+      loadSource(0)
         .then(function(html) {
           document.open();
           document.write(html);
           document.close();
         })
-        .catch(function(error) {
-          document.getElementById('docroi-loader').textContent = error.message;
+        .catch(function() {
+          document.getElementById('docroi-loader').textContent = 'No se pudo cargar la píldora. Revisa el despliegue de Vercel.';
         });
     </script>
   </body>
