@@ -13,10 +13,19 @@
 <body>
   <div id="docroi-loader">Cargando Connection 00 · DOC ROI...</div>
   <script>
-    fetch('./public/connection_00_ingenieria_de_prompts_pildora_wordpress.txt?ts=' + Date.now(), { cache: 'no-store' })
-      .then(function(response){ if(!response.ok) throw new Error('No se pudo cargar Connection 00.'); return response.text(); })
-      .then(function(html){ document.open(); document.write(html); document.close(); })
-      .catch(function(error){ document.getElementById('docroi-loader').textContent = error.message; });
+    (function(){
+      var fileName = 'connection_00_ingenieria_de_prompts_pildora_wordpress.txt';
+      fetch('./' + fileName + '?ts=' + Date.now(), { cache: 'no-store' })
+        .then(function(response){
+          if(response.ok) return response.text();
+          return fetch('/' + fileName + '?ts=' + Date.now(), { cache: 'no-store' }).then(function(response2){
+            if(!response2.ok) throw new Error('No se pudo cargar Connection 00.');
+            return response2.text();
+          });
+        })
+        .then(function(html){ document.open(); document.write(html); document.close(); })
+        .catch(function(error){ document.getElementById('docroi-loader').textContent = error.message; });
+    }());
   </script>
 </body>
 </html>
