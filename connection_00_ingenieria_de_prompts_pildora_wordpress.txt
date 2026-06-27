@@ -23,6 +23,37 @@
   <!-- FINAL FOOTER -->
   <footer style="background:#000000;padding:68px 24px 54px;text-align:center;"><div style="max-width:920px;margin:0 auto;"><a href="https://el-botiquin-del-doc-roi.vercel.app/" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none;margin-bottom:24px;"><img src="https://docroi.marketing/wp-content/uploads/2026/05/Logo_Negro_DoC_ROI.jpg" alt="Doc ROI" style="height:72px;width:auto;display:block;"></a><div style="margin-bottom:28px;"><a href="https://doc-roi-executive.vercel.app/" target="blank" style="display:inline-flex;align-items:center;justify-content:center;color:#FFFFFF;text-decoration:none;font-size:15px;font-weight:900;letter-spacing:.01em;line-height:1.4;border-bottom:1px solid rgba(255,255,255,.42);padding-bottom:4px;">Consulta con Doc ROI →</a></div><div style="display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:14px;color:#D1D5DB;font-size:14px;line-height:1.6;margin-bottom:24px;"><a href="https://docroi.marketing/aviso-legal/" target="_blank" rel="noopener" style="color:#D1D5DB;text-decoration:none;">Política de privacidad</a><span style="opacity:.4;">|</span><a href="https://docroi.marketing/aviso-legal/" target="_blank" rel="noopener" style="color:#D1D5DB;text-decoration:none;">Aviso legal</a><span style="opacity:.4;">|</span><a href="https://docroi.marketing/aviso-legal/" target="_blank" rel="noopener" style="color:#D1D5DB;text-decoration:none;">Propiedad intelectual</a></div><div style="font-size:15px;line-height:1.9;color:#C0C7D1;font-weight:400;letter-spacing:.01em;"><span style="display:block;">La propiedad intelectual del ecosistema Doc ROI pertenece al</span><a href="https://docroi.marketing/ph-d-jorge-lucio/" target="_blank" rel="noopener noreferrer" style="text-decoration:none;"><span style="display:block;color:#F3F4F6 !important;font-weight:500;">Ph. D. Jorge Lucio Sánchez Galán.</span></a></div></div></footer>
 </div>
+<style id="docroi-final-fixes">
+#detectiveTags.tag-cloud{background:#F8FBFD!important;border:1px solid #D8ECF8!important;border-radius:14px!important}
+#detectiveTags .tag-btn{background:#FFFFFF!important;border:1px solid #D8ECF8!important;color:#003B5C!important;box-shadow:0 8px 18px rgba(8,17,31,.04)!important}
+#detectiveTags .tag-btn:before{content:""!important;display:none!important}
+#detectiveTags .tag-btn.active{background:#003B5C!important;border-color:#003B5C!important;color:#FFFFFF!important}
+#detectiveTags .tag-btn.good{background:#EAF6FB!important;border-color:#83C99D!important;color:#0F7A4F!important}
+#detectiveTags .tag-btn.bad{background:#FCE7E7!important;border-color:#E4A2A2!important;color:#A83333!important}
+</style>
+<script>
+(function(){
+  function tidyText(){
+    document.querySelectorAll('#detectiveFeedback').forEach(function(el){
+      el.innerHTML=el.innerHTML.replace(/etiqueta amarilla/g,'opción').replace(/nube amarilla/g,'nube de opciones');
+    });
+  }
+  function autoFinishMemory(){
+    var q=document.getElementById('quizQuestion');
+    var next=document.getElementById('nextQuestion');
+    if(!q||!next||next.disabled)return;
+    var m=q.textContent.match(/Pregunta\s+(\d+)\s+de\s+(\d+)/i);
+    if(m&&m[1]===m[2])setTimeout(function(){if(!next.disabled)next.click();},350);
+  }
+  document.addEventListener('click',function(ev){
+    if(ev.target.closest('#detectiveTags .tag-btn')||ev.target.closest('#detectiveCheck')||ev.target.closest('#detectiveNext'))setTimeout(tidyText,50);
+    if(ev.target.closest('.answer-choice'))setTimeout(autoFinishMemory,120);
+  },true);
+  var mo=new MutationObserver(function(){tidyText();});
+  mo.observe(document.documentElement,{subtree:true,childList:true,characterData:true});
+  setTimeout(tidyText,900);
+})();
+</script>
 <script>
 (function(){var tabs=document.querySelectorAll('.docroi-tab');var panels={maquina:document.getElementById('tab-maquina'),formulas:document.getElementById('tab-formulas'),archivador:document.getElementById('tab-archivador')};var empty=document.getElementById('docroi-empty');tabs.forEach(function(tab){tab.addEventListener('click',function(){var key=tab.getAttribute('data-tab');tabs.forEach(function(t){t.classList.remove('active')});tab.classList.add('active');Object.keys(panels).forEach(function(k){panels[k].classList.remove('active')});empty.classList.add('docroi-hidden');panels[key].classList.add('active');});});document.querySelectorAll('.docroi-copy').forEach(function(btn){btn.addEventListener('click',function(){var text=btn.parentElement.querySelector('code').innerText;if(navigator.clipboard){navigator.clipboard.writeText(text)}btn.innerText='Copiado';setTimeout(function(){btn.innerText='Copiar'},1400);});});})();
 </script>
