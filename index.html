@@ -25,26 +25,245 @@ body{margin:0;background:#F4F7FA;color:#0B0F19;font-family:Inter,Arial,sans-seri
   </div>
 </div>
 <script>
-(async function(){
-  const target = document.getElementById('docroi-app');
-  try {
-    const response = await fetch('/connection_00_ingenieria_de_prompts_pildora_wordpress.txt', { cache: 'no-store' });
-    if (!response.ok) throw new Error('No se pudo cargar el bloque publicado');
-    const html = await response.text();
-    target.innerHTML = html;
+(function(){
+  function installMemoryJoggerPatch(){
+    var root = document.getElementById('docroi-app') || document;
+    function $(s){return root.querySelector(s)}
+    function $all(s){return Array.from(root.querySelectorAll(s))}
+    function shuffle(a){
+      a = a.slice();
+      for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}
+      return a;
+    }
+    function downloadBlob(name, blob){
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(function(){URL.revokeObjectURL(a.href)}, 800);
+    }
+    function safeText(value){return String(value || '').trim() || 'Persona certificada'}
+    if(!$('#startQuiz') || !$('#certPng')) return;
 
-    Array.from(target.querySelectorAll('script')).forEach(function(oldScript){
-      const script = document.createElement('script');
-      Array.from(oldScript.attributes).forEach(function(attr){
-        script.setAttribute(attr.name, attr.value);
+    var levelConfig = {
+      bronze:{need:4,total:6,label:'BRONZE',color:'#C98A54'},
+      silver:{need:6,total:8,label:'SILVER',color:'#DCE7F2'},
+      gold:{need:8,total:10,label:'GOLD',color:'#D9B64E'}
+    };
+    var questionPools = {
+      bronze:[
+        {q:'Quieres que la IA sepa de qué va la situación antes de responder. ¿Qué pieza falta?',a:'Contexto',why:'El contexto sitúa el caso y evita respuestas genéricas.',c:['Rol','Formato','Contexto','Firma']},
+        {q:'Necesitas que la IA responda como profesor, consultor o editor. ¿Qué estás definiendo?',a:'Rol',why:'El rol indica desde qué mirada profesional debe trabajar la IA.',c:['Rol','Resultado','Canal','Tema']},
+        {q:'Pides: “hazme una tabla con tres columnas”. ¿Qué variable estás usando?',a:'Formato',why:'El formato define cómo debe entregarse la respuesta.',c:['Formato','Problema','Audiencia','Tono']},
+        {q:'Quieres que la IA proponga pasos concretos para mañana. ¿Qué pieza lo activa?',a:'Acción',why:'La acción convierte la intención en una tarea concreta.',c:['Acción','Logo','Color','Fuente']},
+        {q:'La respuesta es correcta, pero demasiado técnica para alumnos que empiezan. ¿Qué variable conviene aclarar?',a:'Destinatario',why:'El destinatario adapta lenguaje, profundidad y ejemplos.',c:['Destinatario','Fecha','Archivo','Firma']},
+        {q:'Pides que la respuesta termine como checklist. ¿Qué estás fijando?',a:'Resultado',why:'El resultado marca el entregable útil que quieres recibir.',c:['Resultado','Ruido','Canal','Sector']},
+        {q:'Si escribes “Actúa como editor ejecutivo”, ¿qué parte del prompt estás creando?',a:'Rol',why:'Ese texto asigna un papel profesional a la IA.',c:['Rol','Contexto','Métrica','Idioma']},
+        {q:'Si escribes “Estamos preparando una sesión para directivos”, ¿qué parte estás dando?',a:'Contexto',why:'Eso explica la situación de partida.',c:['Contexto','Formato','Tono','Archivo']},
+        {q:'La IA te devuelve un texto largo y poco útil. ¿Qué faltó pedir?',a:'Formato claro',why:'Un formato claro ayuda a convertir la respuesta en algo usable.',c:['Formato claro','Más emojis','Una imagen','Un título largo']},
+        {q:'Quieres una respuesta amable, sobria y profesional. ¿Qué estás ajustando?',a:'Tono',why:'El tono controla cómo se percibe el mensaje.',c:['Tono','Rol','Tabla','Enlace']},
+        {q:'¿Qué conviene hacer antes de pedir “hazme algo mejor”?',a:'Decir qué quieres mejorar',why:'La IA necesita criterio: claridad, brevedad, foco, estructura o utilidad.',c:['Decir qué quieres mejorar','Pedirlo en mayúsculas','Cambiar de navegador','No dar contexto']},
+        {q:'¿Qué prompt es más claro?',a:'Resume este texto en 5 puntos para un comité directivo',why:'Incluye acción, formato y destinatario.',c:['Resume este texto en 5 puntos para un comité directivo','Hazlo bien','Dime cosas','Mejora esto un poco']},
+        {q:'Quieres que la IA no invente datos. ¿Qué instrucción ayuda más?',a:'Si falta información, dilo antes de responder',why:'Esa regla reduce suposiciones y mejora seguridad.',c:['Si falta información, dilo antes de responder','Contesta siempre rápido','Usa palabras bonitas','Hazlo más largo']},
+        {q:'Un buen prompt no solo pide contenido. También debe pedir...',a:'Una salida usable',why:'El objetivo es obtener algo que puedas aplicar, revisar o decidir.',c:['Una salida usable','Más decoración','Una respuesta secreta','Un color']},
+        {q:'¿Qué fórmula básica usa Rol, Tarea y Formato?',a:'RTF',why:'RTF sirve para empezar rápido con una petición ordenada.',c:['RTF','COAST','PAIN','PDF']},
+        {q:'La IA respondió a otra cosa. ¿Cuál suele ser la causa?',a:'La instrucción era ambigua',why:'Cuando la petición no concreta acción y resultado, la IA interpreta demasiado.',c:['La instrucción era ambigua','La pantalla era pequeña','El logo era oscuro','Había pocas letras']},
+        {q:'¿Qué pregunta te haces para definir “Resultado”?',a:'¿Qué quiero recibir al final?',why:'Resultado mira al entregable final.',c:['¿Qué quiero recibir al final?','¿Qué color uso?','¿Quién paga?','¿Dónde está el botón?']},
+        {q:'¿Qué pregunta te haces para definir “Contexto”?',a:'¿Qué debe saber la IA antes de empezar?',why:'Contexto reúne la información previa necesaria.',c:['¿Qué debe saber la IA antes de empezar?','¿Cuántas imágenes pongo?','¿Qué música suena?','¿Qué contraseña uso?']}
+      ],
+      silver:[
+        {q:'Tienes una campaña con contexto, objetivo, acciones y escenario. ¿Qué fórmula encaja?',a:'COAST',why:'COAST ordena campañas, propuestas y planes con varias condiciones.',c:['COAST','RTF','STAR','PDF']},
+        {q:'Quieres diagnosticar por qué bajan las respuestas de clientes. ¿Qué fórmula usarías?',a:'PAIN',why:'PAIN ayuda a analizar problema, acción, información y próximos pasos.',c:['PAIN','COAST','RTF','FAQ']},
+        {q:'Una petición tiene propósito, expectativa, contexto, pedido y acción. ¿Qué receta estás usando?',a:'PECRA',why:'PECRA funciona bien para solicitudes más completas.',c:['PECRA','RTF','TAG','ZIP']},
+        {q:'La IA debe comparar tres opciones con ventajas y riesgos. ¿Qué falta pedir?',a:'Criterios de comparación',why:'Sin criterios, la comparación puede ser superficial.',c:['Criterios de comparación','Más saludo','Un chiste','Un logo']},
+        {q:'Quieres que no use tecnicismos porque el público empieza desde cero. ¿Qué variable manda?',a:'Destinatario',why:'El destinatario ajusta lenguaje y profundidad.',c:['Destinatario','Formato','Archivo','Fecha']},
+        {q:'Pides “dame una versión A para email y una B para LinkedIn”. ¿Qué estás controlando?',a:'Canal',why:'El canal cambia longitud, tono y estructura.',c:['Canal','Rol','Problema','Firma']},
+        {q:'La IA te da una buena idea, pero no sabes cómo ejecutarla. ¿Qué pedirías después?',a:'Próximos pasos',why:'Los próximos pasos convierten la idea en acción.',c:['Próximos pasos','Más teoría','Otro color','Una cita larga']},
+        {q:'Si el prompt tendrá uso repetido por un equipo, conviene convertirlo en...',a:'Plantilla reutilizable',why:'Una plantilla permite repetir el criterio sin rehacer todo cada vez.',c:['Plantilla reutilizable','Mensaje improvisado','Archivo sin nombre','Respuesta cerrada']},
+        {q:'¿Qué opción es mejor para pedir una revisión?',a:'Evalúa claridad, precisión y utilidad antes de reescribir',why:'Incluye criterios concretos de evaluación.',c:['Evalúa claridad, precisión y utilidad antes de reescribir','Míralo','Haz magia','Dime si está bien']},
+        {q:'Cuando falta información crítica, ¿qué debe hacer la IA?',a:'Preguntar o declarar el supuesto',why:'Así evita inventar y deja claro qué falta.',c:['Preguntar o declarar el supuesto','Inventar lo probable','Ignorar la duda','Responder más rápido']},
+        {q:'Quieres una respuesta ejecutiva para dirección. ¿Qué combinación ayuda más?',a:'Rol senior, síntesis y decisión recomendada',why:'Une perspectiva, brevedad y utilidad para decidir.',c:['Rol senior, síntesis y decisión recomendada','Mucho texto sin estructura','Solo emojis','Una lista sin contexto']},
+        {q:'¿Qué mejora más un prompt de marketing?',a:'Objetivo claro y audiencia concreta',why:'Marketing necesita saber a quién habla y para qué.',c:['Objetivo claro y audiencia concreta','Más signos de exclamación','Una fuente distinta','Menos contexto']},
+        {q:'Pides “usa estos datos y no añadas fuentes externas”. ¿Qué estás marcando?',a:'Restricción',why:'La restricción define límites de trabajo.',c:['Restricción','Tono','Rol','Medalla']},
+        {q:'La IA responde bien, pero no sirve para copiar y pegar. ¿Qué faltó?',a:'Formato de entrega',why:'El formato convierte la respuesta en entregable.',c:['Formato de entrega','Más contexto histórico','Una pregunta final','Menos precisión']},
+        {q:'¿Cuál es una buena segunda iteración?',a:'Hazlo más breve y orientado a decisión',why:'La iteración debe tener una dirección clara.',c:['Hazlo más breve y orientado a decisión','Otra vez','No me gusta','Cambia algo']},
+        {q:'Para crear una dinámica formativa con ejemplo, práctica y cierre, ¿qué fórmula encaja mejor?',a:'CREATE',why:'CREATE ayuda a estructurar experiencias y contenido práctico.',c:['CREATE','PAIN','RTF','ROI']},
+        {q:'Si quieres explicar un concepto y después pedir una acción, ¿qué fórmula se acerca?',a:'ERA',why:'ERA combina explicación, razonamiento y acción.',c:['ERA','COAST','ZIP','CSV']},
+        {q:'¿Qué pregunta detecta si un prompt está listo?',a:'¿La salida esperada queda clara?',why:'Si no se entiende la salida, falta cerrar el pedido.',c:['¿La salida esperada queda clara?','¿Tiene muchas palabras?','¿Suena moderno?','¿Ocupa una pantalla?']},
+        {q:'En una sesión de máster, la IA debe responder con ejemplos simples. ¿Qué dos variables pesan más?',a:'Destinatario y detalle',why:'El destinatario adapta nivel; el detalle concreta cómo explicar.',c:['Destinatario y detalle','Logo y color','Fecha y firma','Archivo y enlace']},
+        {q:'Quieres que la IA revise un texto sin cambiar la idea central. ¿Qué debes añadir?',a:'Límite de edición',why:'El límite evita que reescriba más de lo necesario.',c:['Límite de edición','Más creatividad','Menos contexto','Otro canal']},
+        {q:'¿Qué convierte una respuesta correcta en una respuesta útil?',a:'Que tenga acción, formato y criterio',why:'La utilidad aparece cuando puedes aplicar la salida.',c:['Que tenga acción, formato y criterio','Que sea larga','Que use palabras difíciles','Que parezca brillante']},
+        {q:'Para una tarea compleja, ¿qué conviene hacer?',a:'Separar la petición en piezas',why:'Las piezas reducen ambigüedad y facilitan revisar.',c:['Separar la petición en piezas','Escribir todo de golpe','No dar ejemplos','Quitar el objetivo']}
+      ],
+      gold:[
+        {q:'Quieres que un equipo use el mismo prompt cada semana. ¿Qué debes crear?',a:'Un workflow con plantilla',why:'El workflow convierte el prompt en proceso repetible.',c:['Un workflow con plantilla','Una frase suelta','Un mensaje privado','Una imagen sin instrucciones']},
+        {q:'La IA ayuda a decidir inversión, pero faltan datos. ¿Qué debe aparecer en la respuesta?',a:'Supuestos y riesgos',why:'En decisiones de negocio hay que declarar incertidumbre.',c:['Supuestos y riesgos','Solo una conclusión','Más entusiasmo','Un resumen sin datos']},
+        {q:'Quieres conectar una respuesta de IA con impacto empresarial. ¿Qué criterio añades?',a:'ROI o valor esperado',why:'El criterio de valor conecta producción con negocio.',c:['ROI o valor esperado','Color corporativo','Número de páginas','Nombre del archivo']},
+        {q:'Una buena instrucción para comité debe priorizar...',a:'Decisión, evidencia y siguiente paso',why:'El comité necesita decidir, no solo leer contenido.',c:['Decisión, evidencia y siguiente paso','Historias largas','Tono informal','Detalles decorativos']},
+        {q:'Si una salida puede afectar a clientes, ¿qué capa debes pedir?',a:'Control de calidad',why:'La revisión reduce errores antes de publicar o enviar.',c:['Control de calidad','Más velocidad','Una broma','Otro icono']},
+        {q:'Quieres comparar oportunidades por impacto, esfuerzo y riesgo. ¿Qué estructura conviene?',a:'Matriz de decisión',why:'La matriz permite comparar con criterio visible.',c:['Matriz de decisión','Párrafo libre','Lluvia de ideas sin orden','Lista de emojis']},
+        {q:'La IA debe usar datos internos de la empresa. ¿Qué preocupación aparece?',a:'Gobernanza y confidencialidad',why:'Hay que controlar qué datos se usan y cómo.',c:['Gobernanza y confidencialidad','Tipo de letra','Color del botón','Longitud del título']},
+        {q:'Quieres mejorar una respuesta en tres rondas. ¿Qué estás aplicando?',a:'Iteración dirigida',why:'Cada ronda debe corregir un aspecto concreto.',c:['Iteración dirigida','Improvisación total','Repetición sin criterio','Cambio de tema']},
+        {q:'¿Qué hace que un prompt sea escalable?',a:'Variables claras y huecos reutilizables',why:'Así otra persona puede adaptarlo sin romperlo.',c:['Variables claras y huecos reutilizables','Un texto muy largo','Una única pregunta','Un ejemplo oculto']},
+        {q:'Si el resultado debe alimentar una presentación ejecutiva, ¿qué pides?',a:'Síntesis, mensajes clave y recomendación',why:'Una presentación necesita foco y decisión.',c:['Síntesis, mensajes clave y recomendación','Texto completo sin edición','Ideas al azar','Una descripción técnica extensa']},
+        {q:'El prompt produce respuestas diferentes cada vez. ¿Cómo estabilizas?',a:'Añadiendo criterios, formato y restricciones',why:'Esas piezas reducen variación innecesaria.',c:['Añadiendo criterios, formato y restricciones','Pidiendo suerte','Usando menos información','Quitando el contexto']},
+        {q:'Quieres auditar una respuesta de IA. ¿Qué pides?',a:'Errores, riesgos y mejoras concretas',why:'Auditar no es elogiar: es localizar fallos y corregirlos.',c:['Errores, riesgos y mejoras concretas','Solo una nota positiva','Más longitud','Un título bonito']},
+        {q:'¿Qué diferencia hay entre prompt y sistema de trabajo?',a:'El sistema define cuándo, cómo y para qué se usa',why:'Un prompt aislado no garantiza adopción ni consistencia.',c:['El sistema define cuándo, cómo y para qué se usa','No hay diferencia','El sistema es más corto','El prompt siempre decide solo']},
+        {q:'Para entrenar a un equipo no técnico, la mejor prueba es...',a:'Un caso real sencillo con feedback inmediato',why:'Aprender haciendo reduce barrera y mejora recuerdo.',c:['Un caso real sencillo con feedback inmediato','Una definición larga','Una lista de modelos','Una explicación abstracta']},
+        {q:'Quieres que la IA no solo responda, sino que mejore el proceso. ¿Qué le pides?',a:'Diagnóstico y rediseño del flujo',why:'Eso sube de tarea aislada a mejora operativa.',c:['Diagnóstico y rediseño del flujo','Un resumen corto','Un saludo formal','Una frase motivadora']},
+        {q:'¿Qué señal indica que un prompt está maduro?',a:'Otra persona puede usarlo y obtener una salida parecida',why:'La madurez se nota en repetibilidad y claridad.',c:['Otra persona puede usarlo y obtener una salida parecida','Solo lo entiende quien lo escribió','Tiene muchas palabras','No necesita revisión']},
+        {q:'Si trabajas con información sensible, ¿qué instrucción no debe faltar?',a:'No incluir datos personales ni confidenciales innecesarios',why:'Protege privacidad y reduce riesgo.',c:['No incluir datos personales ni confidenciales innecesarios','Hazlo más viral','Usa cualquier dato','Ignora restricciones']},
+        {q:'Una salida debe pasar a producción. ¿Qué pides antes?',a:'Checklist de validación',why:'El checklist permite revisar antes de usar en real.',c:['Checklist de validación','Texto más poético','Un resumen informal','Una tabla sin criterios']},
+        {q:'¿Qué une IA generativa y productividad real?',a:'Menos fricción para decidir o producir mejor',why:'La productividad aparece cuando se reduce esfuerzo y aumenta calidad.',c:['Menos fricción para decidir o producir mejor','Más prompts guardados sin uso','Más herramientas abiertas','Más texto automático']},
+        {q:'Para crear un playbook de prompts, ¿qué pieza es clave?',a:'Casos de uso con receta y ejemplo',why:'El playbook debe enseñar cuándo usar cada prompt y cómo adaptarlo.',c:['Casos de uso con receta y ejemplo','Una lista de nombres','Solo teoría','Un índice vacío']},
+        {q:'¿Qué debe hacer un prompt maestro?',a:'Guiar una tarea completa con variables editables',why:'Un prompt maestro sirve como estructura reutilizable.',c:['Guiar una tarea completa con variables editables','Responder siempre igual','Ocultar instrucciones','Eliminar el contexto']},
+        {q:'Si la IA propone una acción arriesgada, ¿qué debe pedir el usuario?',a:'Alternativas y mitigaciones',why:'No basta con detectar riesgo: hay que gestionarlo.',c:['Alternativas y mitigaciones','Una respuesta más rápida','Un estilo más alegre','Un ejemplo irrelevante']},
+        {q:'¿Qué mejora una decisión asistida por IA?',a:'Datos, supuestos, opciones y criterio',why:'La decisión mejora cuando se ve la lógica completa.',c:['Datos, supuestos, opciones y criterio','Solo una recomendación contundente','Un tono convincente sin datos','Una tabla vacía']},
+        {q:'El equipo copia prompts sin entenderlos. ¿Qué falta en la formación?',a:'Explicar la función de cada variable',why:'Entender la función permite adaptar, no solo copiar.',c:['Explicar la función de cada variable','Dar más prompts cerrados','Quitar los ejemplos','Acelerar la sesión']}
+      ]
+    };
+    var level = 'bronze', qi = 0, qscore = 0, certOk = false, qs = [];
+    function renderPulses(){
+      var total = levelConfig[level].total;
+      var list = $('#pulseList');
+      if(!list) return;
+      list.innerHTML = Array.from({length:total}).map(function(_,i){
+        return '<div class="pulse '+(i<qscore?'on':'')+'">Pulso '+String(i+1).padStart(2,'0')+'</div>';
+      }).join('');
+    }
+    function renderCert(){
+      var cfg = levelConfig[level];
+      var name = safeText($('#certName') && $('#certName').value);
+      if($('#certPerson')) $('#certPerson').textContent = certOk ? name : 'Persona en práctica';
+      if($('#certRank')) $('#certRank').textContent = certOk ? cfg.label : 'En práctica';
+      if($('#certCopy')) $('#certCopy').textContent = certOk ? 'Ha completado Memory Jogger en el laboratorio Doc ROI.' : 'Completa Memory Jogger para obtener una medalla.';
+      var box = $('#certBox');
+      if(box){box.style.borderColor = certOk ? cfg.color : 'rgba(91,159,220,.65)'}
+    }
+    function resetQuiz(){
+      qi = 0; qscore = 0; certOk = false;
+      qs = shuffle(questionPools[level]).slice(0, levelConfig[level].total);
+      if($('#quizBar')) $('#quizBar').style.width = '0%';
+      if($('#quizLevel')) $('#quizLevel').textContent = levelConfig[level].label;
+      if($('#quizCount')) $('#quizCount').textContent = 'Pulsa empezar juego.';
+      if($('#quizQuestion')) $('#quizQuestion').textContent = '¿Preparado?';
+      if($('#quizOptions')) $('#quizOptions').innerHTML = '';
+      if($('#quizFeedback')) $('#quizFeedback').textContent = 'Cuando falles, te diremos por qué y podrás seguir practicando.';
+      renderPulses(); renderCert();
+    }
+    function ask(){
+      if(qi >= qs.length){finish(); return;}
+      var q = qs[qi];
+      if($('#quizCount')) $('#quizCount').textContent = 'Pregunta '+(qi+1)+' de '+qs.length+' · '+qscore+' aciertos';
+      if($('#quizQuestion')) $('#quizQuestion').textContent = q.q;
+      if($('#quizBar')) $('#quizBar').style.width = Math.round((qi / qs.length) * 100) + '%';
+      var opts = shuffle(q.c.slice());
+      if($('#quizOptions')) $('#quizOptions').innerHTML = opts.map(function(o){return '<button class="btn" type="button" data-a="'+String(o).replace(/"/g,'&quot;')+'">'+o+'</button>'}).join('');
+      $all('#quizOptions button').forEach(function(b){
+        b.onclick = function(){
+          var ok = b.dataset.a === q.a;
+          $all('#quizOptions button').forEach(function(x){x.disabled = true; if(x.dataset.a === q.a) x.classList.add('primary')});
+          if(ok){qscore++; if($('#quizFeedback')) $('#quizFeedback').innerHTML = '<strong>Correcto.</strong> '+q.why;}
+          else {if($('#quizFeedback')) $('#quizFeedback').innerHTML = '<strong>No es esa.</strong> La respuesta correcta es <strong>'+q.a+'</strong>. '+q.why;}
+          qi++;
+          renderPulses();
+          setTimeout(ask, 950);
+        };
       });
-      script.text = oldScript.textContent;
-      oldScript.replaceWith(script);
+    }
+    function finish(){
+      certOk = qscore >= levelConfig[level].need;
+      if($('#quizBar')) $('#quizBar').style.width = '100%';
+      if($('#quizQuestion')) $('#quizQuestion').textContent = certOk ? 'Partida superada. Certificado desbloqueado.' : 'Te has quedado cerca. Repítelo y desbloquea el certificado.';
+      if($('#quizOptions')) $('#quizOptions').innerHTML = '';
+      if($('#quizCount')) $('#quizCount').textContent = qscore+'/'+qs.length+' aciertos · necesitas '+levelConfig[level].need;
+      if($('#quizFeedback')) $('#quizFeedback').innerHTML = certOk ? '<strong>Bien jugado.</strong> Ya puedes descargar tu diploma como imagen PNG.' : '<strong>Ánimo.</strong> Todavía no hay diploma; repite la partida y sube tu marcador.';
+      renderCert();
+    }
+    function wrap(ctx, text, x, y, maxWidth, lineHeight){
+      var words = String(text).split(' '), line = '', lines = [];
+      words.forEach(function(word){
+        var test = line ? line + ' ' + word : word;
+        if(ctx.measureText(test).width > maxWidth && line){lines.push(line); line = word;} else line = test;
+      });
+      lines.push(line);
+      lines.forEach(function(l,i){ctx.fillText(l, x, y + i * lineHeight)});
+      return y + lines.length * lineHeight;
+    }
+    function drawDiploma(includeLogo, done){
+      var cfg = levelConfig[level], name = safeText($('#certName') && $('#certName').value);
+      var canvas = document.createElement('canvas'), ctx = canvas.getContext('2d');
+      canvas.width = 1080; canvas.height = 1600;
+      var g = ctx.createLinearGradient(0,0,0,1600); g.addColorStop(0,'#071421'); g.addColorStop(1,'#020711'); ctx.fillStyle = g; ctx.fillRect(0,0,1080,1600);
+      var rg = ctx.createRadialGradient(540,650,40,540,650,520); rg.addColorStop(0,'rgba(0,98,180,.42)'); rg.addColorStop(1,'rgba(0,98,180,0)'); ctx.fillStyle = rg; ctx.fillRect(0,0,1080,1600);
+      ctx.strokeStyle = 'rgba(116,177,232,.72)'; ctx.lineWidth = 4; ctx.beginPath(); ctx.roundRect(70,70,940,1460,54); ctx.stroke();
+      ctx.textAlign = 'center'; ctx.fillStyle = '#F8FBFF'; ctx.font = '800 58px Arial';
+      ctx.fillText('Doc ROI', 540, 185);
+      ctx.fillStyle = '#9ED0FF'; ctx.font = '700 24px Arial'; ctx.letterSpacing = '6px'; ctx.fillText('PROMPT ENGINEERING', 540, 260); ctx.letterSpacing = '0px';
+      ctx.fillStyle = cfg.color; ctx.font = '900 118px Arial'; ctx.fillText(cfg.label, 540, 430);
+      ctx.strokeStyle = 'rgba(80,169,255,.55)'; ctx.beginPath(); ctx.moveTo(250,485); ctx.lineTo(830,485); ctx.stroke();
+      ctx.beginPath(); ctx.arc(540,725,178,0,Math.PI*2); ctx.strokeStyle = cfg.color; ctx.lineWidth = 14; ctx.stroke();
+      ctx.beginPath(); ctx.arc(540,725,135,0,Math.PI*2); ctx.strokeStyle = 'rgba(158,208,255,.45)'; ctx.lineWidth = 3; ctx.stroke();
+      ctx.fillStyle = '#F8FBFF'; ctx.font = '900 88px Arial'; ctx.fillText('ROI', 540, 750);
+      ctx.fillStyle = '#FFFFFF'; ctx.font = '900 72px Arial'; wrap(ctx, name.toUpperCase(), 540, 1040, 800, 82);
+      ctx.fillStyle = '#F4F8FC'; ctx.font = '500 48px Arial'; wrap(ctx, 'Ha completado Memory Jogger', 540, 1170, 780, 60);
+      ctx.fillStyle = '#9ED0FF'; ctx.font = '700 24px Arial'; ctx.fillText('CERTIFICACIÓN BASADA EN RESULTADO', 540, 1430);
+      ctx.fillStyle = '#D8ECF8'; ctx.font = '500 26px Arial'; ctx.fillText(qscore+'/'+levelConfig[level].total+' aciertos · Connection 00', 540, 1490);
+      done(canvas);
+    }
+    function downloadCertificateImage(){
+      if(!certOk){alert('Primero supera la partida para descargar el diploma.'); return;}
+      drawDiploma(false, function(canvas){
+        canvas.toBlob(function(blob){
+          if(blob) downloadBlob('diploma-docroi-memory-jogger-'+level+'.png', blob);
+        }, 'image/png');
+      });
+    }
+    $('#startQuiz').onclick = function(){qscore=0; qi=0; certOk=false; qs=shuffle(questionPools[level]).slice(0, levelConfig[level].total); renderPulses(); renderCert(); ask();};
+    $all('.level').forEach(function(b){
+      b.onclick = function(){
+        level = b.dataset.level || 'bronze';
+        $all('.level').forEach(function(x){x.classList.toggle('active', x === b)});
+        resetQuiz();
+      };
     });
-  } catch (error) {
-    target.innerHTML = '<div class="docroi-loader"><div class="docroi-loader-card"><strong>No se pudo cargar Connection 00</strong><p>Actualiza la página o revisa el despliegue en Vercel.</p></div></div>';
-    console.error(error);
+    if($('#certName')) $('#certName').oninput = renderCert;
+    $('#certPng').onclick = downloadCertificateImage;
+    if($('#certPdf')) $('#certPdf').onclick = function(){if(!certOk){alert('Primero supera la partida para descargar el diploma.'); return;} window.print();};
+    if($('#certShare')) $('#certShare').onclick = function(){
+      if(!certOk){alert('Primero supera la partida para compartir el diploma.'); return;}
+      var text = 'Doc ROI · Memory Jogger · '+levelConfig[level].label+' · '+safeText($('#certName') && $('#certName').value);
+      if(navigator.share) navigator.share({title:'Diploma Doc ROI', text:text});
+      else if(navigator.clipboard) navigator.clipboard.writeText(text);
+    };
+    resetQuiz();
   }
+
+  async function loadConnection(){
+    const target = document.getElementById('docroi-app');
+    try {
+      const response = await fetch('/connection_00_ingenieria_de_prompts_pildora_wordpress.txt', { cache: 'no-store' });
+      if (!response.ok) throw new Error('No se pudo cargar el bloque publicado');
+      const html = await response.text();
+      target.innerHTML = html;
+
+      Array.from(target.querySelectorAll('script')).forEach(function(oldScript){
+        const script = document.createElement('script');
+        Array.from(oldScript.attributes).forEach(function(attr){
+          script.setAttribute(attr.name, attr.value);
+        });
+        script.text = oldScript.textContent;
+        oldScript.replaceWith(script);
+      });
+      setTimeout(installMemoryJoggerPatch, 0);
+    } catch (error) {
+      target.innerHTML = '<div class="docroi-loader"><div class="docroi-loader-card"><strong>No se pudo cargar Connection 00</strong><p>Actualiza la página o revisa el despliegue en Vercel.</p></div></div>';
+      console.error(error);
+    }
+  }
+  loadConnection();
 }());
 </script>
 </body>
